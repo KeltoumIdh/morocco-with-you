@@ -1,0 +1,35 @@
+# Dependencies
+node_modules/
+
+# Environment (secrets)
+.env
+.env.local
+.env.*.local
+server/.env
+server/.env.local
+
+# Build
+dist/
+build/
+
+# Logs / debug
+*.log
+npm-debug.log*
+
+# Editor / OS
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
+
+# Playwright
+test-results/
+playwright-report/
+playwright/.cache/
+
+# Generated seed SQL (optional — remove this line if you want to commit it)
+server/seed/generated_mvp_inserts.sql
+
+# Vite
+*.local
