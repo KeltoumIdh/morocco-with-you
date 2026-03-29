@@ -105,6 +105,10 @@ npm run test:e2e
 
 Optional admin scenario: set `E2E_ADMIN_EMAIL` and `E2E_ADMIN_PASSWORD`. See `playwright.config.mjs` for `PLAYWRIGHT_BASE_URL` and `PLAYWRIGHT_NO_SERVER`.
 
+## Deploy (production)
+
+Step-by-step **Render (free API) + Vercel (free frontend)** is in [`DEPLOY.md`](./DEPLOY.md). The repo includes `render.yaml` (optional Blueprint) and `vercel.json` (SPA routing for React Router).
+
 ## License
 
 Private project unless noted otherwise.

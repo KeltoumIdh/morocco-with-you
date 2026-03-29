@@ -1,0 +1,14 @@
+# Render Blueprint (optional): connect repo → New Blueprint → select this file
+# Or create a Web Service manually using the same build/start commands.
+services:
+  - type: web
+    name: morocco-with-you-api
+    runtime: node
+    plan: free
+    region: frankfurt
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
