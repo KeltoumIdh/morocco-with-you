@@ -9,7 +9,7 @@
   "scripts": {
     "start": "node server/index.js",
     "dev": "vite",
-    "dev:api": "node api/server.js",
+    "dev:api": "node legacy-json-api/server.js",
     "dev:server": "node --env-file=server/.env server/index.js",
     "embed": "node --env-file=server/.env server/scripts/embed-catalogue.js",
     "embed:catalogue": "node --env-file=server/.env server/scripts/embed-catalogue.js",

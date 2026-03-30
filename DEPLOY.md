@@ -133,6 +133,10 @@ On Render, **`NODE_ENV=production`** makes `npm install` skip **devDependencies*
 
 Alternatively: **Settings** → **General** → scroll to **Build & Development Settings**; some accounts show **Clear Build Cache** there.
 
+### Vercel: `api/db.js` conflicts with `api/db.json`
+
+Vercel reserves the root **`/api`** directory for **serverless functions** and forbids two files whose names differ only by extension (e.g. `db.js` + `db.json`). This repo’s **optional LowDB mock API** was moved to **`legacy-json-api/`** so the root has no `api/` folder. Use **`npm run dev:server`** for the real Express API (`server/`).
+
 ### Vercel: build fails at `vercel build`
 
 - **Node.js version:** **Settings** → **General** → **Node.js Version** → choose **20.x** (must match `engines` in `package.json` and `.nvmrc`).

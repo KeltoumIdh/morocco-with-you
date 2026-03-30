@@ -85,6 +85,7 @@ npm run embed:catalogue
 ```
 src/                 # React app (user + admin routes in App.jsx)
 server/              # Express API, routes, services, SQL schemas
+legacy-json-api/     # Optional local LowDB mock (`npm run dev:api`) — not on Vercel
 server/migrations/   # Versioned SQL (e.g. data quality views)
 server/seed/         # JSONL MVP seed + optional generated SQL
 e2e/                 # Playwright specs
