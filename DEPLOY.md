@@ -124,9 +124,18 @@ On Render, **`NODE_ENV=production`** makes `npm install` skip **devDependencies*
 - **Express API (recommended):** Build command = `npm ci` (or `npm install`). Start command = `npm start`. **Do not** set the build command to `npm run build` unless you are hosting the static frontend on Render.
 - After changing `package.json`, **commit `package-lock.json`** and redeploy.
 
+### Vercel: clear build cache
+
+1. Open the project on [vercel.com](https://vercel.com) → **Deployments**.
+2. Open the **⋯** (three dots) on the latest deployment → **Redeploy**.
+3. Enable **Redeploy with existing Build Cache** → turn it **OFF** (wording may be “Clear cache and redeploy” / “Skip build cache” depending on UI version).
+4. Confirm **Redeploy**.
+
+Alternatively: **Settings** → **General** → scroll to **Build & Development Settings**; some accounts show **Clear Build Cache** there.
+
 ### Vercel: build fails at `vercel build`
 
-- **Node:** Project → Settings → General → **Node.js Version** = **20.x** (this repo has `.nvmrc` with `20` and `engines.node` `>=20`).
+- **Node.js version:** **Settings** → **General** → **Node.js Version** → choose **20.x** (must match `engines` in `package.json` and `.nvmrc`).
 - **Env:** Add all `VITE_*` variables for **Production** before building (see `env.vercel.template`).
 - Redeploy after pushing lockfile + dependency changes.
 
