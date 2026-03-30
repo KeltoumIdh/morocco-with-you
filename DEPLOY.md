@@ -115,6 +115,30 @@ Paste the signing secret into Render as `STRIPE_WEBHOOK_SECRET`.
 
 ---
 
+## Troubleshooting
+
+### Render: `sh: 1: vite: not found` or `Exited with status 127`
+
+On Render, **`NODE_ENV=production`** makes `npm install` skip **devDependencies**. This repo now keeps **Vite + Tailwind + PostCSS** in **`dependencies`** so `npm run build` works if you ever run it.
+
+- **Express API (recommended):** Build command = `npm ci` (or `npm install`). Start command = `npm start`. **Do not** set the build command to `npm run build` unless you are hosting the static frontend on Render.
+- After changing `package.json`, **commit `package-lock.json`** and redeploy.
+
+### Vercel: build fails at `vercel build`
+
+- **Node:** Project → Settings → General → **Node.js Version** = **20.x** (this repo has `.nvmrc` with `20` and `engines.node` `>=20`).
+- **Env:** Add all `VITE_*` variables for **Production** before building (see `env.vercel.template`).
+- Redeploy after pushing lockfile + dependency changes.
+
+## Env templates (copy from your local `.env` — never commit filled files)
+
+| File | Use |
+|------|-----|
+| `env.render.template` | Fill `__...__` placeholders from `server/.env`, then paste into Render (or bulk import if the UI supports `.env`). |
+| `env.vercel.template` | Fill from root `.env` + your Render `VITE_API_URL`; add in Vercel → Environment Variables. |
+
+**Order:** Deploy Render first → set `VITE_API_URL` on Vercel → deploy Vercel → set `CLIENT_URL` / `ADMIN_URL` on Render to the Vercel URL → redeploy Render.
+
 ## Files in this repo
 
 | File | Role |

@@ -1,12 +1,14 @@
 # Render Blueprint (optional): connect repo → New Blueprint → select this file
-# Or create a Web Service manually using the same build/start commands.
+#
+# API only (Express): install prod deps, do NOT run "npm run build" (no Vite needed).
+# If your dashboard uses "npm run build" by mistake, vite is now in dependencies so it still works.
 services:
   - type: web
     name: morocco-with-you-api
     runtime: node
     plan: free
     region: frankfurt
-    buildCommand: npm install
+    buildCommand: npm ci
     startCommand: npm start
     healthCheckPath: /health
     envVars:
