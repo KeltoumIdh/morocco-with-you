@@ -2,6 +2,29 @@
 
 React (Vite) travel marketplace for Morocco: **customer app** (`UserApp`) and **admin console** (`/admin/*`), backed by **Express** + **Supabase** (Postgres, Auth, Storage) and optional **Stripe** for bookings.
 
+## Project flow (how it works)
+
+### User flow (customer)
+
+- Browse **Home** → **Explore** (search/filter) → open a listing (experience/activity/restaurant/…)
+- Book an experience (Stripe optional) → view **Booking success**
+- Use **AI Trip Planner** → generates an itinerary → save/view it later (Supabase)
+
+### Admin flow
+
+- Admin logs in → opens `/admin/dashboard`
+- Create/update listings (experiences + verticals). Updates can reflect in the customer UI (realtime when enabled).
+
+### System flow (architecture)
+
+- **Vercel (frontend)** calls **Render (API)** at `VITE_API_URL`
+- API reads/writes **Supabase Postgres** and uses **Supabase Auth**
+- AI features call the configured provider (Gemini/OpenAI) and may use **pgvector embeddings** for search
+
+### Free-tier note
+
+This project can run fully on **free tiers**. That means you may see **cold starts**, **slower responses**, or **temporary AI limits**. Paid tiers improve speed and reliability.
+
 ## Stack
 
 - **Frontend:** React 18, Vite, Tailwind, React Router, Leaflet (itinerary maps), Stripe.js
