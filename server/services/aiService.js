@@ -6,8 +6,7 @@ import { supabase } from "./supabase.js";
 import { hybridSearch, canUseSemanticSearch } from "./embeddings.js";
 import { getActivePrompt, renderPrompt } from "./promptManager.js";
 
-const CHAT_MODEL =
-  process.env.OPENAI_CHAT_MODEL?.trim() || "gpt-4o-mini";
+const CHAT_MODEL = process.env.OPENAI_CHAT_MODEL?.trim() || "gpt-4o-mini";
 
 function hasGeminiKey() {
   return !!(
@@ -31,7 +30,7 @@ function isOpenAIQuotaError(err) {
 function isGeminiQuotaError(err) {
   const msg = String(err?.message || err || "");
   return /429|quota|rate[\s-]?limit|exceeded|Resource exhausted|billing|free_tier/i.test(
-    msg
+    msg,
   );
 }
 
@@ -60,60 +59,189 @@ export function activeChatModelForLogging() {
 // ── Rule-based itinerary templates ────────────────────────────
 const BASE_DAYS = {
   desert: [
-    { time: "Morning",   activity: "Camel trek into the dunes",        duration: "2h",     note: "Watch the golden light hit the Erg Chebbi dunes at sunrise.", location: "Merzouga" },
-    { time: "Afternoon", activity: "Berber camp arrival & mint tea",    duration: "1h",     note: "Settle into your luxury desert camp, meet your Berber hosts.", location: "Erg Chebbi Camp" },
-    { time: "Evening",   activity: "Stargazing & traditional dinner",   duration: "3h",     note: "No light pollution — the Milky Way is extraordinary here.", location: "Sahara Desert" },
+    {
+      time: "Morning",
+      activity: "Camel trek into the dunes",
+      duration: "2h",
+      note: "Watch the golden light hit the Erg Chebbi dunes at sunrise.",
+      location: "Merzouga",
+    },
+    {
+      time: "Afternoon",
+      activity: "Berber camp arrival & mint tea",
+      duration: "1h",
+      note: "Settle into your luxury desert camp, meet your Berber hosts.",
+      location: "Erg Chebbi Camp",
+    },
+    {
+      time: "Evening",
+      activity: "Stargazing & traditional dinner",
+      duration: "3h",
+      note: "No light pollution — the Milky Way is extraordinary here.",
+      location: "Sahara Desert",
+    },
   ],
   culture: [
-    { time: "Morning",   activity: "Fès Medina guided walk",            duration: "3h",     note: "The world's largest car-free urban area. Lose yourself in 1,200 years of history.", location: "Fès el-Bali" },
-    { time: "Afternoon", activity: "Tanneries & leather souks",         duration: "2h",     note: "Watch the ancient dyeing process from a rooftop terrace.", location: "Chouara Tannery" },
-    { time: "Evening",   activity: "Riad dinner & live Gnawa music",    duration: "2h",     note: "Dine in a candlelit courtyard to hypnotic Gnawa rhythms.", location: "Riad Dar Seffarine" },
+    {
+      time: "Morning",
+      activity: "Fès Medina guided walk",
+      duration: "3h",
+      note: "The world's largest car-free urban area. Lose yourself in 1,200 years of history.",
+      location: "Fès el-Bali",
+    },
+    {
+      time: "Afternoon",
+      activity: "Tanneries & leather souks",
+      duration: "2h",
+      note: "Watch the ancient dyeing process from a rooftop terrace.",
+      location: "Chouara Tannery",
+    },
+    {
+      time: "Evening",
+      activity: "Riad dinner & live Gnawa music",
+      duration: "2h",
+      note: "Dine in a candlelit courtyard to hypnotic Gnawa rhythms.",
+      location: "Riad Dar Seffarine",
+    },
   ],
   food: [
-    { time: "Morning",   activity: "Djemaa el-Fna breakfast",           duration: "1.5h",   note: "Fresh msemen, argan oil, and amlou — the Moroccan breakfast ritual.", location: "Jemaa el-Fna, Marrakech" },
-    { time: "Afternoon", activity: "Riad cooking class",                 duration: "3h",     note: "Make tagine, bastilla, and harira with a local chef.", location: "Marrakech Medina" },
-    { time: "Evening",   activity: "Night market street food tour",      duration: "2h",     note: "Snail soup, merguez, and fresh-squeezed orange juice.", location: "Jemaa el-Fna" },
+    {
+      time: "Morning",
+      activity: "Djemaa el-Fna breakfast",
+      duration: "1.5h",
+      note: "Fresh msemen, argan oil, and amlou — the Moroccan breakfast ritual.",
+      location: "Jemaa el-Fna, Marrakech",
+    },
+    {
+      time: "Afternoon",
+      activity: "Riad cooking class",
+      duration: "3h",
+      note: "Make tagine, bastilla, and harira with a local chef.",
+      location: "Marrakech Medina",
+    },
+    {
+      time: "Evening",
+      activity: "Night market street food tour",
+      duration: "2h",
+      note: "Snail soup, merguez, and fresh-squeezed orange juice.",
+      location: "Jemaa el-Fna",
+    },
   ],
   hiking: [
-    { time: "Morning",   activity: "Imlil village departure",           duration: "1h",     note: "Start early to beat the heat. Pack layers — altitude changes fast.", location: "Imlil, High Atlas" },
-    { time: "Afternoon", activity: "Jebel Toubkal base camp",           duration: "4h",     note: "North Africa's highest peak at 4,167m. Stunning cedar forest trail.", location: "Toubkal National Park" },
-    { time: "Evening",   activity: "Berber village homestay",           duration: "evening", note: "Sleep in a traditional stone house with a local family.", location: "Aroumd Village" },
+    {
+      time: "Morning",
+      activity: "Imlil village departure",
+      duration: "1h",
+      note: "Start early to beat the heat. Pack layers — altitude changes fast.",
+      location: "Imlil, High Atlas",
+    },
+    {
+      time: "Afternoon",
+      activity: "Jebel Toubkal base camp",
+      duration: "4h",
+      note: "North Africa's highest peak at 4,167m. Stunning cedar forest trail.",
+      location: "Toubkal National Park",
+    },
+    {
+      time: "Evening",
+      activity: "Berber village homestay",
+      duration: "evening",
+      note: "Sleep in a traditional stone house with a local family.",
+      location: "Aroumd Village",
+    },
   ],
   surf: [
-    { time: "Morning",   activity: "Surf lesson — Atlantic coast",      duration: "2h",     note: "Essaouira's consistent wind and gentle waves are perfect for beginners.", location: "Essaouira Beach" },
-    { time: "Afternoon", activity: "Medina & ramparts walk",            duration: "2h",     note: "UNESCO-listed blue-and-white medina with ocean views.", location: "Essaouira Medina" },
-    { time: "Evening",   activity: "Fresh seafood at the port",         duration: "1.5h",   note: "Point at the catch of the day — grilled on the spot.", location: "Essaouira Port" },
+    {
+      time: "Morning",
+      activity: "Surf lesson — Atlantic coast",
+      duration: "2h",
+      note: "Essaouira's consistent wind and gentle waves are perfect for beginners.",
+      location: "Essaouira Beach",
+    },
+    {
+      time: "Afternoon",
+      activity: "Medina & ramparts walk",
+      duration: "2h",
+      note: "UNESCO-listed blue-and-white medina with ocean views.",
+      location: "Essaouira Medina",
+    },
+    {
+      time: "Evening",
+      activity: "Fresh seafood at the port",
+      duration: "1.5h",
+      note: "Point at the catch of the day — grilled on the spot.",
+      location: "Essaouira Port",
+    },
   ],
   luxury: [
-    { time: "Morning",   activity: "Hammam & argan oil massage",        duration: "2h",     note: "A traditional Moroccan steam bath ritual at a 5-star riad.", location: "Marrakech Medina" },
-    { time: "Afternoon", activity: "Majorelle Garden & Yves Saint Laurent Museum", duration: "2h", note: "Cobalt blue architecture and a world-class fashion collection.", location: "Guéliz, Marrakech" },
-    { time: "Evening",   activity: "Rooftop dinner — Nomad Restaurant", duration: "2h",     note: "Contemporary Moroccan cuisine with views of Koutoubia Mosque.", location: "Marrakech Medina" },
+    {
+      time: "Morning",
+      activity: "Hammam & argan oil massage",
+      duration: "2h",
+      note: "A traditional Moroccan steam bath ritual at a 5-star riad.",
+      location: "Marrakech Medina",
+    },
+    {
+      time: "Afternoon",
+      activity: "Majorelle Garden & Yves Saint Laurent Museum",
+      duration: "2h",
+      note: "Cobalt blue architecture and a world-class fashion collection.",
+      location: "Guéliz, Marrakech",
+    },
+    {
+      time: "Evening",
+      activity: "Rooftop dinner — Nomad Restaurant",
+      duration: "2h",
+      note: "Contemporary Moroccan cuisine with views of Koutoubia Mosque.",
+      location: "Marrakech Medina",
+    },
   ],
   photo: [
-    { time: "Morning",   activity: "Blue city golden hour walk",        duration: "2h",     note: "Chefchaouen's blue alleys glow at dawn before tourists arrive.", location: "Chefchaouen" },
-    { time: "Afternoon", activity: "Rif Mountain viewpoint",            duration: "1.5h",   note: "Panoramic views of the medina and surrounding mountains.", location: "Spanish Mosque, Chefchaouen" },
-    { time: "Evening",   activity: "Sunset at the waterfall",           duration: "1h",     note: "Ras el-Maa waterfall — locals gather here at dusk.", location: "Ras el-Maa" },
+    {
+      time: "Morning",
+      activity: "Blue city golden hour walk",
+      duration: "2h",
+      note: "Chefchaouen's blue alleys glow at dawn before tourists arrive.",
+      location: "Chefchaouen",
+    },
+    {
+      time: "Afternoon",
+      activity: "Rif Mountain viewpoint",
+      duration: "1.5h",
+      note: "Panoramic views of the medina and surrounding mountains.",
+      location: "Spanish Mosque, Chefchaouen",
+    },
+    {
+      time: "Evening",
+      activity: "Sunset at the waterfall",
+      duration: "1h",
+      note: "Ras el-Maa waterfall — locals gather here at dusk.",
+      location: "Ras el-Maa",
+    },
   ],
 };
 
 const INTEREST_MAP = {
-  "Desert & Sahara":    "desert",
-  "Medinas & Culture":  "culture",
-  "Food & Cuisine":     "food",
-  "Hiking & Nature":    "hiking",
-  "Surf & Coast":       "surf",
-  "Luxury Riads":       "luxury",
-  "Photography":        "photo",
-  "Architecture":       "culture",
-  "Spiritual":          "culture",
-  "Nightlife":          "food",
+  "Desert & Sahara": "desert",
+  "Medinas & Culture": "culture",
+  "Food & Cuisine": "food",
+  "Hiking & Nature": "hiking",
+  "Surf & Coast": "surf",
+  "Luxury Riads": "luxury",
+  Photography: "photo",
+  Architecture: "culture",
+  Spiritual: "culture",
+  Nightlife: "food",
 };
 
 function parseDurationDays(duration) {
   if (!duration) return 5;
   const d = String(duration).toLowerCase();
   if (d.includes("2 week")) return 14;
-  if (d.includes("8") && (d.includes("10") || d.includes("8–10") || d.includes("8-10")))
+  if (
+    d.includes("8") &&
+    (d.includes("10") || d.includes("8–10") || d.includes("8-10"))
+  )
     return 10;
   if (
     (d.includes("5") && d.includes("7")) ||
@@ -160,7 +288,10 @@ function normalizeItineraryDaysFromAi(parsed, prefs) {
     (Array.isArray(items) ? items : []).map((a) => ({
       time: a?.time || "Morning",
       activity:
-        a?.activity || a?.title || (typeof a === "string" ? a : "") || "Activity",
+        a?.activity ||
+        a?.title ||
+        (typeof a === "string" ? a : "") ||
+        "Activity",
       duration: a?.duration || "2h",
       note: a?.note || a?.description || "",
       location: a?.location || "Morocco",
@@ -205,7 +336,9 @@ function normalizeItineraryDaysFromAi(parsed, prefs) {
 function buildRuleBasedItinerary({ duration, group, budget, interests }) {
   const totalDays = parseDurationDays(duration);
   const keys = (interests || []).map((i) => INTEREST_MAP[i] || "culture");
-  const uniqueKeys = [...new Set(keys.length ? keys : ["culture", "food", "desert"])];
+  const uniqueKeys = [
+    ...new Set(keys.length ? keys : ["culture", "food", "desert"]),
+  ];
 
   const days = Array.from({ length: totalDays }, (_, i) => {
     const key = uniqueKeys[i % uniqueKeys.length];
@@ -214,12 +347,26 @@ function buildRuleBasedItinerary({ duration, group, budget, interests }) {
   });
 
   // Ballpark trip total (€): per-week anchor by tier × (days/7). Not flights, not live hotel rates.
-  const priceMap = { Budget: 350, "Mid-range": 750, Premium: 1500, Luxury: 3000 };
-  const budgetKey = Object.keys(priceMap).find((k) => budget?.includes(k)) || "Mid-range";
+  const priceMap = {
+    Budget: 350,
+    "Mid-range": 750,
+    Premium: 1500,
+    Luxury: 3000,
+  };
+  const budgetKey =
+    Object.keys(priceMap).find((k) => budget?.includes(k)) || "Mid-range";
   const estimatedTotal = priceMap[budgetKey] * (totalDays / 7);
 
   const highlights = uniqueKeys.slice(0, 3).map((k) => {
-    const map = { desert: "Sahara Desert overnight", culture: "Ancient Fès Medina", food: "Marrakech food tour", hiking: "Atlas Mountain trek", surf: "Essaouira surf lesson", luxury: "Luxury riad experience", photo: "Chefchaouen blue city" };
+    const map = {
+      desert: "Sahara Desert overnight",
+      culture: "Ancient Fès Medina",
+      food: "Marrakech food tour",
+      hiking: "Atlas Mountain trek",
+      surf: "Essaouira surf lesson",
+      luxury: "Luxury riad experience",
+      photo: "Chefchaouen blue city",
+    };
     return map[k] || "Morocco highlight";
   });
 
@@ -234,14 +381,42 @@ function buildRuleBasedItinerary({ duration, group, budget, interests }) {
 
 // ── Chat keyword fallback ──────────────────────────────────────
 const CHAT_KEYWORDS = {
-  "plan":     { text: "I'd love to help you plan your Morocco trip! Tell me your travel dates, group size, and what excites you most — desert, culture, food, or adventure?", suggestions: ["7-day itinerary", "Best time to visit", "Budget tips"] },
-  "sahara":   { text: "The Sahara is unmissable. I recommend 2 nights at Merzouga — arrive by sunset for the camel trek, sleep under the stars, and wake to a sunrise over the dunes. Best months: October–April.", suggestions: ["Book Sahara experience", "What to pack", "Getting there"] },
-  "marrakech":{ text: "Marrakech is the perfect base. Stay in the medina for authenticity, or Guéliz for modern comfort. Must-do: Djemaa el-Fna at dusk, Majorelle Garden at dawn, and a hammam afternoon.", suggestions: ["Best riads", "Day trips from Marrakech", "Food guide"] },
-  "food":     { text: "Moroccan cuisine is extraordinary. Don't miss: tagine (slow-cooked in clay), bastilla (sweet pigeon pie), harira (spiced soup), and fresh msemen for breakfast. The Fès medina has the best street food.", suggestions: ["Book cooking class", "Best restaurants", "Food tour"] },
-  "budget":   { text: "Morocco is excellent value. Budget: €50–80/day (hostels, street food). Mid-range: €120–200/day (riads, restaurants). Luxury: €300+/day (5-star riads, private guides).", suggestions: ["Budget itinerary", "Luxury options", "Best value experiences"] },
-  "when":     { text: "Best times to visit: March–May (warm, green, few crowds) and September–November (perfect temperatures). Avoid July–August in the south — extreme heat. December is magical for Sahara stargazing.", suggestions: ["Plan my trip", "Weather by region", "Festival calendar"] },
-  "riad":     { text: "Top riads: El Fenn (stunning rooftop pool, art collection, €200+/night), Riad Yasmine (iconic blue courtyard, €120/night), Dar Anika (authentic 16th-century, €90/night).", suggestions: ["Book a riad", "Riad vs hotel", "Medina neighborhoods"] },
-  "fes":      { text: "Fès el-Bali is the world's largest car-free urban area and a UNESCO World Heritage Site. Hire a local guide (€30–50) — the medina has 9,000 streets and you will get lost without one.", suggestions: ["Book Fès guide", "Fès food trail", "Day trip from Fès"] },
+  plan: {
+    text: "I'd love to help you plan your Morocco trip! Tell me your travel dates, group size, and what excites you most — desert, culture, food, or adventure?",
+    suggestions: ["7-day itinerary", "Best time to visit", "Budget tips"],
+  },
+  sahara: {
+    text: "The Sahara is unmissable. I recommend 2 nights at Merzouga — arrive by sunset for the camel trek, sleep under the stars, and wake to a sunrise over the dunes. Best months: October–April.",
+    suggestions: ["Book Sahara experience", "What to pack", "Getting there"],
+  },
+  marrakech: {
+    text: "Marrakech is the perfect base. Stay in the medina for authenticity, or Guéliz for modern comfort. Must-do: Djemaa el-Fna at dusk, Majorelle Garden at dawn, and a hammam afternoon.",
+    suggestions: ["Best riads", "Day trips from Marrakech", "Food guide"],
+  },
+  food: {
+    text: "Moroccan cuisine is extraordinary. Don't miss: tagine (slow-cooked in clay), bastilla (sweet pigeon pie), harira (spiced soup), and fresh msemen for breakfast. The Fès medina has the best street food.",
+    suggestions: ["Book cooking class", "Best restaurants", "Food tour"],
+  },
+  budget: {
+    text: "Morocco is excellent value. Budget: €50–80/day (hostels, street food). Mid-range: €120–200/day (riads, restaurants). Luxury: €300+/day (5-star riads, private guides).",
+    suggestions: [
+      "Budget itinerary",
+      "Luxury options",
+      "Best value experiences",
+    ],
+  },
+  when: {
+    text: "Best times to visit: March–May (warm, green, few crowds) and September–November (perfect temperatures). Avoid July–August in the south — extreme heat. December is magical for Sahara stargazing.",
+    suggestions: ["Plan my trip", "Weather by region", "Festival calendar"],
+  },
+  riad: {
+    text: "Top riads: El Fenn (stunning rooftop pool, art collection, €200+/night), Riad Yasmine (iconic blue courtyard, €120/night), Dar Anika (authentic 16th-century, €90/night).",
+    suggestions: ["Book a riad", "Riad vs hotel", "Medina neighborhoods"],
+  },
+  fes: {
+    text: "Fès el-Bali is the world's largest car-free urban area and a UNESCO World Heritage Site. Hire a local guide (€30–50) — the medina has 9,000 streets and you will get lost without one.",
+    suggestions: ["Book Fès guide", "Fès food trail", "Day trip from Fès"],
+  },
 };
 
 function getRuleBasedReply(message) {
@@ -275,7 +450,9 @@ async function callOpenAI(messages, model = CHAT_MODEL) {
   const msg = data.choices?.[0]?.message?.content;
   if (typeof msg === "string") return msg;
   if (Array.isArray(msg)) {
-    return msg.map((p) => (typeof p === "string" ? p : p?.text ?? "")).join("");
+    return msg
+      .map((p) => (typeof p === "string" ? p : (p?.text ?? "")))
+      .join("");
   }
   if (msg != null && typeof msg === "object") return JSON.stringify(msg);
   return String(msg ?? "");
@@ -283,13 +460,16 @@ async function callOpenAI(messages, model = CHAT_MODEL) {
 
 async function callChatLLM(messages) {
   const r = resolveChatProvider();
-  if (r === "none") throw new Error("No chat provider: set OPENAI_API_KEY or GEMINI_API_KEY");
+  if (r === "none")
+    throw new Error("No chat provider: set OPENAI_API_KEY or GEMINI_API_KEY");
   if (r === "openai") {
     try {
       return await callOpenAI(messages);
     } catch (e) {
       if (isOpenAIQuotaError(e) && hasGeminiKey()) {
-        console.warn("[ai] OpenAI quota/billing error; falling back to Gemini for this request");
+        console.warn(
+          "[ai] OpenAI quota/billing error; falling back to Gemini for this request",
+        );
         const { geminiGenerateContent } = await import("./geminiProvider.js");
         return geminiGenerateContent(messages);
       }
@@ -304,7 +484,7 @@ async function callChatLLM(messages) {
       if (!isGeminiQuotaError(e)) throw e;
       if (openAiKeyPresent() && !skipOpenAIInAuto()) {
         console.warn(
-          "[ai] Gemini failed (quota/rate); trying OpenAI for this request"
+          "[ai] Gemini failed (quota/rate); trying OpenAI for this request",
         );
         try {
           return await callOpenAI(messages);
@@ -313,7 +493,7 @@ async function callChatLLM(messages) {
         }
       }
       console.warn(
-        "[ai] Gemini failed (quota/rate); trying Ollama for this request"
+        "[ai] Gemini failed (quota/rate); trying Ollama for this request",
       );
       const { ollamaChat, ollamaChatModel } = await import("./llmProviders.js");
       try {
@@ -451,7 +631,7 @@ function parseGuardrailOutput(raw) {
  */
 export async function checkGuardrail(userMessage) {
   const off = /^(0|false|no|off)$/i.test(
-    process.env.GUARDRAIL_ENABLED?.trim() || ""
+    process.env.GUARDRAIL_ENABLED?.trim() || "",
   );
   if (off) return { safe: true, category: "travel", redirect: null };
 
@@ -638,7 +818,8 @@ export async function generateRAGChatReply({
     try {
       const raw = await callChatLLM(messages);
       tokensUsed =
-        estimateTokensFromMessages(messages) + Math.ceil(String(raw).length / 4);
+        estimateTokensFromMessages(messages) +
+        Math.ceil(String(raw).length / 4);
       const parsed = parseRagAssistantOutput(raw);
       text = parsed.text;
       suggestions = parsed.suggestions;
@@ -732,7 +913,7 @@ ${catalogueItems
   Location: ${item.city || item.location || "—"}
   Price: ${item.price != null ? `€${item.price}` : "on request"}
   Tags: ${(item.tags || []).join(", ")}
-`
+`,
   )
   .join("")}
 `
@@ -917,11 +1098,11 @@ export async function generateRecommendations({ userId, limit = 6 }) {
     const history = [
       ...(bookings || []).flatMap((b) => [
         b.experiences?.title,
-        ...((b.experiences?.tags || []).map(String)),
+        ...(b.experiences?.tags || []).map(String),
       ]),
       ...(saved || []).flatMap((s) => [
         s.experiences?.title,
-        ...((s.experiences?.tags || []).map(String)),
+        ...(s.experiences?.tags || []).map(String),
       ]),
     ].filter(Boolean);
 
@@ -979,7 +1160,10 @@ export async function generateRecommendations({ userId, limit = 6 }) {
         reason: `Based on your interest in ${history.slice(0, 3).join(", ")}`,
         expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
       }));
-      await supabase.from("user_recommendations").delete().eq("user_id", userId);
+      await supabase
+        .from("user_recommendations")
+        .delete()
+        .eq("user_id", userId);
       await supabase.from("user_recommendations").insert(recs);
     }
 
@@ -1041,8 +1225,8 @@ export async function suggestItineraryForRequest({ request }) {
       ? Math.max(
           1,
           Math.ceil(
-            (new Date(end_date) - new Date(start_date)) / (1000 * 60 * 60 * 24)
-          )
+            (new Date(end_date) - new Date(start_date)) / (1000 * 60 * 60 * 24),
+          ),
         )
       : 7);
 
@@ -1055,7 +1239,7 @@ export async function suggestItineraryForRequest({ request }) {
   City: ${item.city || item.location}
   Price: ${item.price != null ? `€${item.price}` : "ask"}
   Tags: ${(item.tags || []).join(", ")}
-`
+`,
           )
           .join("")
       : "(none)";

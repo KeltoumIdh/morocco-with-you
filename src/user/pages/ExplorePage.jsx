@@ -48,10 +48,14 @@ function SkeletonCard() {
   );
 }
 
-export default function ExplorePage({ setPage, setSelectedExperience }) {
+export default function ExplorePage({
+  setPage,
+  setSelectedExperience,
+  initialSearch = "",
+}) {
   const [activeTag, setActiveTag] = useState("All");
   const [sort, setSort] = useState("rating");
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState(() => initialSearch);
   const debouncedSearch = useDebounce(search, 300);
   const semanticQuery = useDebounce(search, 500);
 
