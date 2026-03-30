@@ -28,22 +28,60 @@ import { errorHandler }   from './middleware/errorHandler.js';
 
 const app = express();
 
+/** Split env like "https://a.com,https://b.com" → unique origins (no trailing slash). */
+function parseOriginList(...sources) {
+  const out = [];
+  for (const src of sources) {
+    if (src == null || src === '') continue;
+    for (const part of String(src).split(',')) {
+      const t = part.trim().replace(/\/$/, '');
+      if (t) out.push(t);
+    }
+  }
+  return [...new Set(out)];
+}
+
+const defaultOrigins = [
+  'http://localhost:5173',
+  'http://localhost:5174',
+  'http://localhost:3000',
+];
+const configuredOrigins = parseOriginList(
+  process.env.CLIENT_URL,
+  process.env.ADMIN_URL,
+  process.env.ADDITIONAL_CORS_ORIGINS,
+  ...defaultOrigins,
+);
+
+function isVercelPreviewOrigin(origin) {
+  if (process.env.CORS_ALLOW_VERCEL !== '1') return false;
+  try {
+    const u = new URL(origin);
+    return u.protocol === 'https:' && u.hostname.endsWith('.vercel.app');
+  } catch {
+    return false;
+  }
+}
+
+const corsOptions = {
+  origin(origin, cb) {
+    if (!origin) return cb(null, true);
+    if (configuredOrigins.includes(origin)) return cb(null, true);
+    if (isVercelPreviewOrigin(origin)) return cb(null, true);
+    return cb(null, false);
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+};
+
 // ── Middleware ──
 app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }));
 
-app.use(cors({
-  origin: [
-    process.env.CLIENT_URL || 'http://localhost:5173',
-    process.env.ADMIN_URL  || 'http://localhost:5174',
-    'http://localhost:3000',
-  ],
-  credentials: true,
-  methods: ['GET','POST','PUT','PATCH','DELETE','OPTIONS'],
-  allowedHeaders: ['Content-Type','Authorization'],
-}));
+app.use(cors(corsOptions));
 
-// Handle preflight for ALL routes
-app.options('*', cors());
+// Handle preflight for ALL routes (same dynamic rules)
+app.options('*', cors(corsOptions));
 
 // Stripe webhooks MUST use raw body (before express.json)
 app.post(

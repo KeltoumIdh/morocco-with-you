@@ -38,8 +38,10 @@
    | `SUPABASE_URL` | from Supabase → Settings → API |
    | `SUPABASE_SERVICE_KEY` | service_role (secret) |
    | `SUPABASE_ANON_KEY` | anon public |
-   | `CLIENT_URL` | your Vercel site URL, e.g. `https://xxx.vercel.app` (no trailing slash) |
+   | `CLIENT_URL` | exact origin users open, e.g. `https://xxx.vercel.app` (no trailing slash). **Comma-separated** for multiple URLs (prod + preview). |
    | `ADMIN_URL` | same as `CLIENT_URL` if admin lives on the same Vite app |
+   | `CORS_ALLOW_VERCEL` | set to `1` to allow any `https://*.vercel.app` (Hobby preview URLs like `…-eta.vercel.app` without listing each one). Tighten later with explicit `CLIENT_URL` only. |
+   | `ADDITIONAL_CORS_ORIGINS` | optional comma-separated extra origins |
 
    Add when you use them:
 
@@ -90,7 +92,7 @@ Paste the signing secret into Render as `STRIPE_WEBHOOK_SECRET`.
 
 ## 3. Connect everything (important)
 
-1. **Render →** set `CLIENT_URL` and `ADMIN_URL` to your **exact** Vercel URL (`https://….vercel.app`). **Redeploy** the Render service if you change env.
+1. **Render →** set `CLIENT_URL` and `ADMIN_URL` to the **exact** origin in the address bar (e.g. `https://morocco-with-you-eta.vercel.app`). If that differs from your “production” Vercel domain, either list **both** in `CLIENT_URL` (comma-separated) or set `CORS_ALLOW_VERCEL=1`. **Redeploy** Render after changing env.
 2. **Supabase → Authentication → URL configuration:**
    - **Site URL:** your Vercel URL
    - **Redirect URLs:** add the same URL (and `http://localhost:5173` for local dev if you want)
